@@ -53,6 +53,8 @@
       }
 
       const response = await request.json();
+      console.log("Credenciales:", values);
+      console.log("Respuesta:", response);
       authStore.setUser({
         name: response.name,
         email: response.email,
