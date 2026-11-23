@@ -1,79 +1,26 @@
-using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using BackEnd.Data;
+using BackEnd.Modules.Auth;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using ProyectoAPI.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(
-        builder.Configuration.GetConnectionString("DefaultConnection")
-    )
-);
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("VueFrontend", policy =>
-    {
-        policy.WithOrigins("http://localhost:5173")
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
-    });
+builder.Services.AddCors(options => {
+  options.AddPolicy("FrontEnd", (policy) => {
+    policy
+    .WithOrigins("http://localhost:5173")
+    .AllowAnyMethod()
+    .AllowAnyHeader();
+  });
 });
-
-builder.Services.AddOpenApi();
-builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
+builder.Services.AddAuthModule();
 
-var jwtKey = builder.Configuration["Jwt:Key"]
-    ?? throw new InvalidOperationException("Falta configurar Jwt:Key");
-
-builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwtKey)
-            )
-        };
-
-        options.Events = new JwtBearerEvents
-        {
-            OnMessageReceived = context =>
-            {
-                context.Token = context.Request.Cookies["access_token"];
-                return Task.CompletedTask;
-            }
-        };
-    });
-
-builder.Services.AddAuthorization();
+builder.Services.AddDbContext<AppDbContext>((option) => {
+  option.UseNpgsql(builder.Configuration.GetConnectionString("postgresConnection"));
+});
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-app.UseCors("VueFrontend");
-app.UseAuthentication();
-app.UseAuthorization();
-
+app.UseCors("FrontEnd");
 app.MapControllers();
-
-app.MapGet("/", () => "API funcionando correctamente");
-
-app.Run();
+app.Run("http://localhost:3000");

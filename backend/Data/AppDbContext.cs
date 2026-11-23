@@ -1,14 +1,14 @@
+using BackEnd.Modules.Auth.Entities;
 using Microsoft.EntityFrameworkCore;
-using ProyectoAPI.Models;
+namespace BackEnd.Data;
 
-namespace ProyectoAPI.Data;
+public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options) {
 
-public class AppDbContext : DbContext
-{
-    public AppDbContext(DbContextOptions<AppDbContext> options)
-        : base(options)
-    {
-    }
+  public DbSet<User> Users => Set<User>();
 
-    public DbSet<Usuario> Usuarios { get; set; }
+  protected override void OnModelCreating(ModelBuilder modelBuilder) {
+    base.OnModelCreating(modelBuilder);
+  }
+
+
 }
