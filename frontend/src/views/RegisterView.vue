@@ -62,8 +62,14 @@
       });
 
       if (!request.ok) {
-        const err = await request.json();
-        serverError.value = err?.message ?? "No se pudo completar el registro";
+        let errorMsg = "No se pudo completar el registro";
+        try {
+          const err = await request.json();
+          errorMsg = err?.message ?? errorMsg;
+        } catch {
+          errorMsg = "Error en el servidor. Verifica que la base de datos esté activa.";
+        }
+        serverError.value = errorMsg;
         return;
       }
 
